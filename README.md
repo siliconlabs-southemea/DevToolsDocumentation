@@ -2,7 +2,7 @@
 sort: 1
 ---
 
-# Developper Tools
+# Developer Tools
 
 {% include list.liquid all=true %}
 
