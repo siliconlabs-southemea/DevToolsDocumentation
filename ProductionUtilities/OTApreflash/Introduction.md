@@ -3,11 +3,11 @@ sort: 2
 ---
 ## Introduction
 
-Production or test time cost reduction is important. 
+Production or test time cost reduction is important.
 
 The following document will describe how to minimize flashing time by combining binaries into one  to single the flash action.
 
-This may be usefult for example to combine:
+This may be useful for example to combine:
 
 - bootloader + application + production reset application image
 - bootloader. + production tests application + actual application
