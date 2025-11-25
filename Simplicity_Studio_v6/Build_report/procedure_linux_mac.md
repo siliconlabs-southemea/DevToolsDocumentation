@@ -1,7 +1,9 @@
 ---
 sort: 2
 ---
-## Procedure
+## Procedure on Linux or MacOS
+
+for Windows 11 please go to [this page](procedure_win.md).
 
 Once you have created a project in Simplicity Studio and opened it in VSCode, you get access to its directory tree.
 
