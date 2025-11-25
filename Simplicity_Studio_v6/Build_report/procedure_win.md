@@ -28,7 +28,7 @@ Just add the last line of the below in your POST_BUILD command list, changing YO
 add_custom_command(TARGET YOUR_PROJECT_NAME
     POST_BUILD
 ... // keep existing lines and add the next one
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:YOUR_PROJECT_NAME>
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:YOUR_PROJECT_NAME>"
 ```
 
 ## Reporting Flash and RAM usage:
@@ -40,7 +40,7 @@ Just add those lines after the WORKING_DIRECTORY one, of course changing YOUR_PR
 The second line call a powershell batch file to generate and print the build report.
 
 ```c
-COMMAND ${CMAKE_SIZE_UTIL} -A --radix=10 "$<TARGET_FILE_BASE_NAME:zigbee_z3_light>.out" > output.txt
+COMMAND ${CMAKE_SIZE_UTIL} -A --radix=10 "$<TARGET_FILE_BASE_NAME:YOUR_PROJECT_NAME>.out" > output.txt
 COMMAND powershell -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/build_report.ps1"
 ```
 
@@ -122,7 +122,7 @@ FLASH: 245756 bytes (including 40960 bytes of NVM)
 
 To report build time, we will take advantage of the **.ninja_log** file generated at compile time and stored in  the **build** directory. This files contains start and stop times in ms for all the cmake actions, therefore all file compilation and  linking time to generate the **.out**.
 
-adding those lines to the build_report.sh will parse the file to generate useful summary:
+adding those lines to the **build_report.ps1** will parse the file to generate useful summary:
 
 ```bash
 $ErrorActionPreference = "Stop"
