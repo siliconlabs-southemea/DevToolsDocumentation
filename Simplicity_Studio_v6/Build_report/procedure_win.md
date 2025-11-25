@@ -11,40 +11,42 @@ In this tree, there a subfolder name **cmake_gcc** holding all the compilation o
 
 But lets stay first in this directory. Once the project is created or even changed from the studio GUI by adding a component for example, some of thoise files are automaticaly updated, therefore any change we could had in purpose of generating a build report would be lost. The best is to take advantage of the **CMakeLists.txt** file here.
 
-The CMakeLists.txt file defines quite some compilation rules, and the one of interest for our build report is the post build related one, usually at the end of the file, starting with:
+## Modifications to CMakeLists.txt:
 
-```c
+The **CMakeLists.txt** file defines quite some compilation rules, and the one of interest for our build report is the post build related one, usually at the end of the file. We will add 3 lines to set the working directory and launching some commands. Here's the end of the file and the modifications to be made. Don't forget to change YOUR_PROJECT_NAME by the one in your project file!
+Explanations on the lines will come in the next chapters.
+
+```diff
+# Create .bin, .hex and .s37 artifacts after building the project
 add_custom_command(TARGET YOUR_PROJECT_NAME
     POST_BUILD
-```
+    COMMAND ${CMAKE_OBJCOPY} ${OBJCOPY_SREC_CMD} "$<TARGET_FILE:YOUR_PROJECT_NAME>" "$<TARGET_FILE_DIR:rfsense_config_202562>/$<TARGET_FILE_BASE_NAME:YOUR_PROJECT_NAME>.s37"
+    COMMAND ${CMAKE_OBJCOPY} ${OBJCOPY_IHEX_CMD} "$<TARGET_FILE:YOUR_PROJECT_NAME>" "$<TARGET_FILE_DIR:rfsense_config_202562>/$<TARGET_FILE_BASE_NAME:YOUR_PROJECT_NAME>.hex"
+    COMMAND ${CMAKE_OBJCOPY} ${OBJCOPY_BIN_CMD}  "$<TARGET_FILE:YOUR_PROJECT_NAME>" "$<TARGET_FILE_DIR:rfsense_config_202562>/$<TARGET_FILE_BASE_NAME:YOUR_PROJECT_NAME>.bin" 
++    WORKING_DIRECTORY "$<TARGET_FILE_DIR:YOUR_PROJECT_NAME>"
++    COMMAND ${CMAKE_SIZE_UTIL} -A --radix=10 "$<TARGET_FILE_BASE_NAME:YOUR_PROJECT_NAME>.out" > output.txt
++    COMMAND powershell -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/build_report.ps1"
+    )
 
-We will add 2 lines to set the working directory and launching some commands.
-
-## Adding the working directory path:
-
-Just add the last line of the below in your POST_BUILD command list, changing YOUR_PROJECT_NAME accordingly. The name is the one in the project section at the beginning of the CMakeLists.txt file.
-
-```c
+# Run post-build pipeline to perform additional post-processing
+if(post_build_command)
 add_custom_command(TARGET YOUR_PROJECT_NAME
     POST_BUILD
-... // keep existing lines and add the next one
-    WORKING_DIRECTORY "$<TARGET_FILE_DIR:YOUR_PROJECT_NAME>"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..
+    COMMAND ${post_build_command}
+)
+endif()
 ```
 
 ## Reporting Flash and RAM usage:
 
+The last 2 lines added above helps running 2 tools.
+
 To report Flash and RAM usage, we will have to use the output of **arm-none-eabi-size tool**. As below we will reformat the output, let's store it in a temporary file name **output.txt**.
 
-Just add those lines after the WORKING_DIRECTORY one, of course changing YOUR_PROJECT_NAME again.
+The second call a powershell batch file to generate and print the build report.
 
-The second line call a powershell batch file to generate and print the build report.
-
-```c
-COMMAND ${CMAKE_SIZE_UTIL} -A --radix=10 "$<TARGET_FILE_BASE_NAME:YOUR_PROJECT_NAME>.out" > output.txt
-COMMAND powershell -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/build_report.ps1"
-```
-
-Create a **build_report.ps1** file in your **cmake_gcc** directory and add those lines:
+Create a **[build_report.ps1](https://gist.github.com/siliconlabs-southemea/72e9b3713fc9e01315893fc83a1266c0)** file in your **cmake_gcc** directory and add those lines:
 
 ```bash
 function Print-MemorySummary([string]$path) {
@@ -122,7 +124,7 @@ FLASH: 245756 bytes (including 40960 bytes of NVM)
 
 To report build time, we will take advantage of the **.ninja_log** file generated at compile time and stored in  the **build** directory. This files contains start and stop times in ms for all the cmake actions, therefore all file compilation and  linking time to generate the **.out**.
 
-adding those lines to the **build_report.ps1** will parse the file to generate useful summary:
+adding those lines to the **[build_report.ps1](https://gist.github.com/siliconlabs-southemea/72e9b3713fc9e01315893fc83a1266c0)** will parse the file to generate useful summary:
 
 ```bash
 $ErrorActionPreference = "Stop"
